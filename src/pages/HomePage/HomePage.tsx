@@ -14,6 +14,7 @@ import {
 } from "../../features/Staff/StaffSelectors";
 import {
   beginTask,
+  completeTask,
   fetchStaffAssignmentsThunk,
 } from "../../features/Staff/StaffThunk";
 import styles from "./HomePage.module.scss";
@@ -60,6 +61,8 @@ const HomePage = () => {
         ? "Start Task"
         : assignment.status === "IN_PROGRESS"
           ? "Complete Task"
+          : assignment.status === "COMPLETED"
+            ? "COMPLETED"
           : assignment.status,
     taskKey: String(assignment.taskId),
   }));
@@ -73,19 +76,27 @@ const HomePage = () => {
   }
 
   const handleTaskAction = async (taskId: number, status: string) => {
-    if (status !== "PENDING") {
+    if (!["PENDING", "IN_PROGRESS"].includes(status)) {
       return;
     }
 
     setActiveTaskId(taskId);
 
     try {
-      await dispatch(beginTask({ taskId })).unwrap();
+      if (status === "PENDING") {
+        await dispatch(beginTask({ taskId })).unwrap();
+      }
+
+      if (status === "IN_PROGRESS") {
+        await dispatch(completeTask({ taskId })).unwrap();
+      }
     } catch (error) {
       const message =
         typeof error === "string"
           ? error
-          : "Unable to begin the selected task.";
+          : status === "PENDING"
+            ? "Unable to begin the selected task."
+            : "Unable to complete the selected task.";
       window.alert(message);
     } finally {
       setActiveTaskId(null);
@@ -140,7 +151,7 @@ const HomePage = () => {
                 {rows.map((assignment) => (
                   <tr key={assignment.taskKey}>
                     <td>{assignment.roomId}</td>
-                    <td>{assignment.taskType} Cleaning</td>
+                    <td>{assignment.taskType}</td>
                     <td>{assignment.durationMinutes} mins</td>
                     <td>{assignment.shift}</td>
                     <td>{formatAssignedAt(assignment.assignedAt)}</td>
@@ -162,7 +173,9 @@ const HomePage = () => {
                         }
                       >
                         {activeTaskId === assignment.taskId
-                          ? "Starting..."
+                          ? assignment.status === "PENDING"
+                            ? "Starting..."
+                            : "Completing..."
                           : assignment.actionLabel}
                       </button>
                     </td>

@@ -21,6 +21,12 @@ export type BeginTaskResponse = {
   taskId: number;
 };
 
+export type CompleteTaskResponse = {
+  message: string;
+  status: string;
+  taskId: number;
+};
+
 const formatCurrentDate = () => {
   const currentDate = new Date();
   const year = currentDate.getFullYear();
@@ -121,6 +127,33 @@ export const beginTask = createAsyncThunk<
   } catch (error) {
     return thunkApi.rejectWithValue(
       getErrorMessage(error, "Unable to begin the selected task."),
+    );
+  }
+});
+
+export const completeTask = createAsyncThunk<
+  CompleteTaskResponse,
+  { taskId: number },
+  { rejectValue: string; state: RootState }
+>("staff/completeTask", async ({ taskId }, thunkApi) => {
+  try {
+    const response = await apiClient.put<CompleteTaskResponse>(
+      "/staff/task/complete",
+      {
+        completedTime: formatLocalDateTime(),
+        taskId,
+      },
+      {
+        signal: thunkApi.signal,
+      },
+    );
+
+    console.log(response.data);
+
+    return response.data;
+  } catch (error) {
+    return thunkApi.rejectWithValue(
+      getErrorMessage(error, "Unable to complete the selected task."),
     );
   }
 });

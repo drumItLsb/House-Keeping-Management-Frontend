@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 
 import {
   beginTask,
+  completeTask,
   fetchStaffAssignmentsThunk,
   type StaffAssignment,
 } from './StaffThunk';
@@ -53,6 +54,20 @@ const staffSlice = createSlice({
       })
       .addCase(beginTask.rejected, (state, action) => {
         state.error = action.payload ?? 'Unable to begin the selected task.';
+      })
+      .addCase(completeTask.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(completeTask.fulfilled, (state, action) => {
+        state.assignments = state.assignments.map((assignment) =>
+          assignment.taskId === action.payload.taskId
+            ? { ...assignment, status: action.payload.status }
+            : assignment,
+        );
+        state.error = null;
+      })
+      .addCase(completeTask.rejected, (state, action) => {
+        state.error = action.payload ?? 'Unable to complete the selected task.';
       });
   },
 });
