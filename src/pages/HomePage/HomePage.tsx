@@ -1,35 +1,154 @@
-import { Navigate } from 'react-router';
+import { useEffect, useMemo, useState } from "react";
+import { Navigate } from "react-router";
 
-import { useAppSelector } from '../../app/hooks';
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import {
   selectCurrentUserName,
   selectCurrentUserRole,
   selectIsAuthenticated,
-} from '../../features/Login/LoginSelectors';
-import styles from './HomePage.module.scss';
+} from "../../features/Login/LoginSelectors";
+import {
+  selectStaffAssignments,
+  selectStaffAssignmentsError,
+  selectStaffAssignmentsStatus,
+} from "../../features/Staff/StaffSelectors";
+import { fetchStaffAssignmentsThunk } from "../../features/Staff/StaffThunk";
+import styles from "./HomePage.module.scss";
+
+const formatAssignedAt = (assignedAt: string) => {
+  const date = new Date(assignedAt);
+
+  if (Number.isNaN(date.getTime())) {
+    return assignedAt;
+  }
+
+  return new Intl.DateTimeFormat("en-IN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+};
 
 const HomePage = () => {
+  const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const userName = useAppSelector(selectCurrentUserName);
   const role = useAppSelector(selectCurrentUserRole);
+  const assignments = useAppSelector(selectStaffAssignments);
+  const assignmentsStatus = useAppSelector(selectStaffAssignmentsStatus);
+  const assignmentsError = useAppSelector(selectStaffAssignmentsError);
+  const [startedTasks, setStartedTasks] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!isAuthenticated || role === "ADMIN") {
+      return;
+    }
+
+    const promise = dispatch(fetchStaffAssignmentsThunk());
+
+    return () => {
+      promise.abort();
+    };
+  }, [dispatch, isAuthenticated, role]);
+
+  const rows = useMemo(() => {
+    return assignments.map((assignment, index) => {
+      const taskKey = `${assignment.roomId}-${assignment.staffId}-${assignment.assignedAt}-${index}`;
+
+      return {
+        ...assignment,
+        actionLabel: startedTasks[taskKey] ? "Mark Completed" : "Start Task",
+        taskKey,
+      };
+    });
+  }, [assignments, startedTasks]);
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
   }
 
-  if (role === 'ADMIN') {
+  if (role === "ADMIN") {
     return <Navigate to="/admin" replace />;
   }
+
+  const handleTaskAction = (taskKey: string) => {
+    setStartedTasks((currentState) => ({
+      ...currentState,
+      [taskKey]: true,
+    }));
+  };
 
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
-        <p className={styles.eyebrow}>Dashboard</p>
-        <h1 className={styles.title}>Welcome back{userName ? `, ${userName}` : ''}.</h1>
+        <p className={styles.eyebrow}>Today&apos;s Assignments</p>
+        <h1 className={styles.title}>
+          Welcome back{userName ? `, ${userName}` : ""}.
+        </h1>
         <p className={styles.description}>
-          Your housekeeping workspace is ready. This page is protected and only visible after
-          login.
+          Review the tasks assigned to you for today and start working through
+          them one by one.
         </p>
+      </section>
+
+      <section className={styles.tasksSection}>
+        {assignmentsStatus === "loading" ? (
+          <div className={styles.stateCard}>Loading today&apos;s tasks...</div>
+        ) : null}
+
+        {assignmentsStatus === "failed" ? (
+          <div className={styles.stateCard}>
+            {assignmentsError || "Unable to load assignments."}
+          </div>
+        ) : null}
+
+        {assignmentsStatus === "succeeded" && rows.length === 0 ? (
+          <div className={styles.stateCard}>
+            No tasks are assigned to you for today.
+          </div>
+        ) : null}
+
+        {rows.length > 0 ? (
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Room ID</th>
+                  <th>Task Type</th>
+                  <th>Duration</th>
+                  <th>Shift</th>
+                  <th>Assigned At</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((assignment) => (
+                  <tr key={assignment.taskKey}>
+                    <td>{assignment.roomId}</td>
+                    <td>{assignment.taskType} Cleaning</td>
+                    <td>{assignment.durationMinutes} mins</td>
+                    <td>{assignment.shift}</td>
+                    <td>{formatAssignedAt(assignment.assignedAt)}</td>
+                    <td>
+                      <span className={styles.statusBadge}>
+                        {assignment.status}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        className={styles.actionButton}
+                        type="button"
+                        onClick={() => handleTaskAction(assignment.taskKey)}
+                      >
+                        {assignment.actionLabel}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
       </section>
     </main>
   );
