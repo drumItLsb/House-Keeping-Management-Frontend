@@ -3,6 +3,17 @@ import { Navigate } from "react-router";
 
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import {
+  selectClockInTime,
+  selectClockOutTime,
+  selectEarlyExit,
+  selectIsClockedIn,
+  selectWorkedHours,
+} from "../../features/Attendance/AttendanceSelectors";
+import {
+  clockingInThunk,
+  clockingOutThunk,
+} from "../../features/Attendance/AttendanceThunk";
+import {
   selectCurrentUserName,
   selectCurrentUserRole,
   selectIsAuthenticated,
@@ -19,11 +30,11 @@ import {
 } from "../../features/Staff/StaffThunk";
 import styles from "./HomePage.module.scss";
 
-const formatAssignedAt = (assignedAt: string) => {
-  const date = new Date(assignedAt);
+const formatDateTime = (value: string) => {
+  const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return assignedAt;
+    return value;
   }
 
   return new Intl.DateTimeFormat("en-IN", {
@@ -32,15 +43,24 @@ const formatAssignedAt = (assignedAt: string) => {
   }).format(date);
 };
 
+const formatAttendanceValue = (value: string | null, emptyText: string) =>
+  value ? formatDateTime(value) : emptyText;
+
 const HomePage = () => {
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const userName = useAppSelector(selectCurrentUserName);
   const role = useAppSelector(selectCurrentUserRole);
+  const clockInTime = useAppSelector(selectClockInTime);
+  const clockOutTime = useAppSelector(selectClockOutTime);
+  const earlyExit = useAppSelector(selectEarlyExit);
+  const isClockedIn = useAppSelector(selectIsClockedIn);
+  const workedHours = useAppSelector(selectWorkedHours);
   const assignments = useAppSelector(selectStaffAssignments);
   const assignmentsStatus = useAppSelector(selectStaffAssignmentsStatus);
   const assignmentsError = useAppSelector(selectStaffAssignmentsError);
   const [activeTaskId, setActiveTaskId] = useState<number | null>(null);
+  const [isAttendanceUpdating, setIsAttendanceUpdating] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated || role === "ADMIN") {
@@ -66,6 +86,8 @@ const HomePage = () => {
             : assignment.status,
     taskKey: String(assignment.taskId),
   }));
+  const isClockActionDisabled = Boolean(clockOutTime);
+  const attendanceActionLabel = !clockInTime ? "ClockIn" : "ClockOut";
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
@@ -103,6 +125,34 @@ const HomePage = () => {
     }
   };
 
+  const handleAttendanceAction = async () => {
+    if (isClockActionDisabled) {
+      return;
+    }
+
+    setIsAttendanceUpdating(true);
+
+    try {
+      if (isClockedIn) {
+        await dispatch(clockingOutThunk()).unwrap();
+        return;
+      }
+
+      await dispatch(clockingInThunk()).unwrap();
+    } catch (error) {
+      const message =
+        typeof error === "string"
+          ? error
+          : isClockedIn
+            ? "Unable to clock out right now."
+            : "Unable to clock in right now.";
+
+      window.alert(message);
+    } finally {
+      setIsAttendanceUpdating(false);
+    }
+  };
+
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
@@ -114,6 +164,70 @@ const HomePage = () => {
           Review the tasks assigned to you for today and start working through
           them one by one.
         </p>
+      </section>
+
+      <section className={styles.attendanceSection}>
+        <article className={styles.attendanceCard}>
+          <div className={styles.attendanceHeader}>
+            <div>
+              <p className={styles.cardEyebrow}>Attendance</p>
+              <h2 className={styles.cardTitle}>Mark your shift for today</h2>
+            </div>
+
+            <button
+              className={styles.attendanceButton}
+              type="button"
+              onClick={handleAttendanceAction}
+              disabled={isAttendanceUpdating || isClockActionDisabled}
+            >
+              {isAttendanceUpdating
+                ? isClockedIn
+                  ? "Clocking out..."
+                  : "Clocking in..."
+                : attendanceActionLabel}
+            </button>
+          </div>
+
+          <div className={styles.attendanceDetails}>
+            <div className={styles.attendanceInfo}>
+              <span className={styles.attendanceLabel}>Clocked In</span>
+              <strong className={styles.attendanceValue}>
+                {formatAttendanceValue(
+                  clockInTime,
+                  "Not clockedIn for the day",
+                )}
+              </strong>
+            </div>
+
+            <div className={styles.attendanceInfo}>
+              <span className={styles.attendanceLabel}>Clocked Out</span>
+              <strong className={styles.attendanceValue}>
+                {formatAttendanceValue(
+                  clockOutTime,
+                  "Not clockedOut for the day",
+                )}
+              </strong>
+            </div>
+
+            {clockOutTime ? (
+              <div className={styles.attendanceInfo}>
+                <span className={styles.attendanceLabel}>Worked Hours</span>
+                <strong className={styles.attendanceValue}>
+                  {workedHours || "Not available"}
+                </strong>
+              </div>
+            ) : null}
+
+            {clockOutTime ? (
+              <div className={styles.attendanceInfo}>
+                <span className={styles.attendanceLabel}>Early Exit</span>
+                <strong className={styles.attendanceValue}>
+                  {earlyExit ? "Yes" : "No"}
+                </strong>
+              </div>
+            ) : null}
+          </div>
+        </article>
       </section>
 
       <section className={styles.tasksSection}>
@@ -154,7 +268,7 @@ const HomePage = () => {
                     <td>{assignment.taskType} Cleaning</td>
                     <td>{assignment.durationMinutes} mins</td>
                     <td>{assignment.shift}</td>
-                    <td>{formatAssignedAt(assignment.assignedAt)}</td>
+                    <td>{formatDateTime(assignment.assignedAt)}</td>
                     <td>
                       <span className={styles.statusBadge}>
                         {assignment.status}

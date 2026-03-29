@@ -42,6 +42,91 @@
   margin: 1.5rem auto 0;
 }
 
+.attendanceSection {
+  max-width: 72rem;
+  margin: 1.5rem auto 0;
+}
+
+.attendanceCard {
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+}
+
+.attendanceHeader {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.cardEyebrow {
+  margin: 0 0 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #0f766e;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: clamp(1.2rem, 3vw, 1.6rem);
+  color: #0f172a;
+}
+
+.attendanceButton {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.8rem 1.25rem;
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  color: #ffffff;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.attendanceButton:hover {
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.2);
+}
+
+.attendanceButton:disabled,
+.actionButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  box-shadow: none;
+}
+
+.attendanceDetails {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.attendanceInfo {
+  padding: 1rem 1.1rem;
+  border: 1px solid #dbeafe;
+  border-radius: 1rem;
+  background: #f8fbff;
+}
+
+.attendanceLabel {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #1d4ed8;
+}
+
+.attendanceValue {
+  color: #0f172a;
+  font-size: 1rem;
+}
+
 .stateCard {
   padding: 1.25rem 1.5rem;
   border-radius: 1.25rem;
@@ -109,4 +194,19 @@
 
 .actionButton:hover {
   box-shadow: 0 12px 24px rgba(13, 148, 136, 0.22);
+}
+
+@media (max-width: 700px) {
+  .attendanceHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .attendanceDetails {
+    grid-template-columns: 1fr;
+  }
+
+  .attendanceButton {
+    width: 100%;
+  }
 }
