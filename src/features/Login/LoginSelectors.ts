@@ -5,3 +5,4 @@ export const selectIsAuthenticated = (state: RootState) => state.login.isAuthent
 export const selectLoginStatus = (state: RootState) => state.login.status;
 export const selectLoginError = (state: RootState) => state.login.error;
 export const selectCurrentUserName = (state: RootState) => state.login.userName;
+export const selectCurrentUserRole = (state: RootState) => state.login.role;

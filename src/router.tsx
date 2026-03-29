@@ -4,6 +4,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 
 import App from './App';
 import AppErrorFallback from './components/AppErrorFallback';
+import AdminDashboard from './pages/AdminDashboard';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 
@@ -23,6 +24,10 @@ const router = createBrowserRouter([
       {
         path: 'home',
         element: <HomePage />,
+      },
+      {
+        path: 'admin',
+        element: <AdminDashboard />,
       },
     ],
   },

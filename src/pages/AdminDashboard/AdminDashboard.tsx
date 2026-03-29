@@ -6,9 +6,9 @@ import {
   selectCurrentUserRole,
   selectIsAuthenticated,
 } from '../../features/Login/LoginSelectors';
-import styles from './HomePage.module.scss';
+import styles from './AdminDashboard.module.scss';
 
-const HomePage = () => {
+const AdminDashboard = () => {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const userName = useAppSelector(selectCurrentUserName);
   const role = useAppSelector(selectCurrentUserRole);
@@ -17,22 +17,22 @@ const HomePage = () => {
     return <Navigate to="/" replace />;
   }
 
-  if (role === 'ADMIN') {
-    return <Navigate to="/admin" replace />;
+  if (role !== 'ADMIN') {
+    return <Navigate to="/home" replace />;
   }
 
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
-        <p className={styles.eyebrow}>Dashboard</p>
-        <h1 className={styles.title}>Welcome back{userName ? `, ${userName}` : ''}.</h1>
+        <p className={styles.eyebrow}>Admin Dashboard</p>
+        <h1 className={styles.title}>Welcome, {userName || 'Administrator'}.</h1>
         <p className={styles.description}>
-          Your housekeeping workspace is ready. This page is protected and only visible after
-          login.
+          You are signed in with administrative access and can manage the housekeeping system
+          from here.
         </p>
       </section>
     </main>
   );
 };
 
-export default HomePage;
+export default AdminDashboard;

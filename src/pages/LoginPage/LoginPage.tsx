@@ -7,6 +7,7 @@ import { z } from "zod";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { clearLoginError } from "../../features/Login/LoginSlice";
 import {
+  selectCurrentUserRole,
   selectIsAuthenticated,
   selectLoginError,
   selectLoginStatus,
@@ -34,6 +35,7 @@ const LoginPage = () => {
   const status = useAppSelector(selectLoginStatus);
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const loginError = useAppSelector(selectLoginError);
+  const role = useAppSelector(selectCurrentUserRole);
 
   const {
     register,
@@ -50,9 +52,9 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/home", { replace: true });
+      navigate(role === "ADMIN" ? "/admin" : "/home", { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, role]);
 
   useEffect(() => {
     return () => {
@@ -72,8 +74,8 @@ const LoginPage = () => {
     loginPromiseRef.current = promise;
 
     try {
-      await promise.unwrap();
-      navigate("/home", { replace: true });
+      const result = await promise.unwrap();
+      navigate(result.role === "ADMIN" ? "/admin" : "/home", { replace: true });
     } catch (error) {
       const message =
         typeof error === "string" ? error : "Unable to login right now.";
