@@ -11,6 +11,7 @@ export type StaffAssignment = {
   shift: string;
   staffId: number;
   status: string;
+  taskId: number;
   taskType: string;
 };
 
@@ -71,8 +72,6 @@ export const fetchStaffAssignmentsThunk = createAsyncThunk<
         signal: thunkApi.signal,
       },
     );
-
-    console.log(response.data);
 
     return response.data;
   } catch (error) {

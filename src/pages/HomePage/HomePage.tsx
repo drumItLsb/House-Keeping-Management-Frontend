@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router";
 
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
@@ -50,17 +50,13 @@ const HomePage = () => {
     };
   }, [dispatch, isAuthenticated, role]);
 
-  const rows = useMemo(() => {
-    return assignments.map((assignment, index) => {
-      const taskKey = `${assignment.roomId}-${assignment.staffId}-${assignment.assignedAt}-${index}`;
-
-      return {
-        ...assignment,
-        actionLabel: startedTasks[taskKey] ? "Mark Completed" : "Start Task",
-        taskKey,
-      };
-    });
-  }, [assignments, startedTasks]);
+  const rows = assignments.map((assignment) => ({
+    ...assignment,
+    actionLabel: startedTasks[String(assignment.taskId)]
+      ? "Mark Completed"
+      : "Start Task",
+    taskKey: String(assignment.taskId),
+  }));
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
