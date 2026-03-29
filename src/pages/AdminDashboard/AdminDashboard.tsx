@@ -49,6 +49,10 @@ const AdminDashboard = () => {
   const shortfall = useAppSelector(selectShortfall);
   const shortfallStatus = useAppSelector(selectShortfallStatus);
   const shortfallError = useAppSelector(selectShortfallError);
+  const isDashboardLoading =
+    assignmentSummaryStatus === "loading" ||
+    assignmentMappingStatus === "loading" ||
+    shortfallStatus === "loading";
 
   useEffect(() => {
     if (!isAuthenticated || role !== "ADMIN") {
@@ -65,24 +69,6 @@ const AdminDashboard = () => {
       shortfallPromise.abort();
     };
   }, [dispatch, isAuthenticated, role]);
-
-  useEffect(() => {
-    if (assignmentSummaryError) {
-      window.alert(assignmentSummaryError);
-    }
-  }, [assignmentSummaryError]);
-
-  useEffect(() => {
-    if (assignmentMappingError) {
-      window.alert(assignmentMappingError);
-    }
-  }, [assignmentMappingError]);
-
-  useEffect(() => {
-    if (shortfallError) {
-      window.alert(shortfallError);
-    }
-  }, [shortfallError]);
 
   if (!isAuthenticated) {
       return <Navigate to="/" replace />;
@@ -103,6 +89,14 @@ const AdminDashboard = () => {
         </p>
       </section>
 
+      {isDashboardLoading ? (
+        <section className={styles.section}>
+          <div className={styles.stateCard}>
+            Loading dashboard data for summary, mapping, and shortfall...
+          </div>
+        </section>
+      ) : null}
+
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <div>
@@ -115,10 +109,6 @@ const AdminDashboard = () => {
             </span>
           ) : null}
         </div>
-
-        {assignmentSummaryStatus === "loading" ? (
-          <div className={styles.stateCard}>Loading assignment summary...</div>
-        ) : null}
 
         {assignmentSummaryStatus === "failed" ? (
           <div className={styles.stateCard}>
@@ -205,10 +195,6 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {assignmentMappingStatus === "loading" ? (
-          <div className={styles.stateCard}>Loading assignment mapping...</div>
-        ) : null}
-
         {assignmentMappingStatus === "failed" ? (
           <div className={styles.stateCard}>
             {assignmentMappingError || "Unable to load assignment mapping."}
@@ -260,10 +246,6 @@ const AdminDashboard = () => {
             <h2 className={styles.sectionTitle}>Immediate staffing signal</h2>
           </div>
         </div>
-
-        {shortfallStatus === "loading" ? (
-          <div className={styles.stateCard}>Loading shortfall indicator...</div>
-        ) : null}
 
         {shortfallStatus === "failed" ? (
           <div className={styles.stateCard}>
