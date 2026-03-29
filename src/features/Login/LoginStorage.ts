@@ -1,7 +1,9 @@
 export const AUTH_STORAGE_KEY = 'housekeeping-auth';
 
 export type StoredAuth = {
+  propertyId: string;
   role: string;
+  staffId: number;
   token: string;
   tokenType: string;
   userName: string;

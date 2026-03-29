@@ -16,7 +16,9 @@ const storedAuth = readStoredAuth();
 const initialState: LoginState = {
   error: null,
   isAuthenticated: Boolean(storedAuth?.token),
+  propertyId: storedAuth?.propertyId ?? '',
   role: storedAuth?.role ?? '',
+  staffId: storedAuth?.staffId ?? 0,
   status: 'idle',
   token: storedAuth?.token ?? '',
   tokenType: storedAuth?.tokenType ?? '',
@@ -40,7 +42,9 @@ const loginSlice = createSlice({
       .addCase(loginThunk.fulfilled, (state, action) => {
         state.error = null;
         state.isAuthenticated = true;
+        state.propertyId = action.payload.propertyId;
         state.role = action.payload.role;
+        state.staffId = action.payload.staffId;
         state.status = 'succeeded';
         state.token = action.payload.token;
         state.tokenType = action.payload.tokenType;
@@ -49,7 +53,9 @@ const loginSlice = createSlice({
       .addCase(loginThunk.rejected, (state, action) => {
         state.error = action.payload ?? 'Login failed.';
         state.isAuthenticated = false;
+        state.propertyId = '';
         state.role = '';
+        state.staffId = 0;
         state.status = 'failed';
         state.token = '';
         state.tokenType = '';
@@ -61,7 +67,9 @@ const loginSlice = createSlice({
       .addCase(logoutThunk.fulfilled, (state) => {
         state.error = null;
         state.isAuthenticated = false;
+        state.propertyId = '';
         state.role = '';
+        state.staffId = 0;
         state.status = 'idle';
         state.token = '';
         state.tokenType = '';
