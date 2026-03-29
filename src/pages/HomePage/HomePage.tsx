@@ -63,7 +63,7 @@ const HomePage = () => {
           ? "Complete Task"
           : assignment.status === "COMPLETED"
             ? "COMPLETED"
-          : assignment.status,
+            : assignment.status,
     taskKey: String(assignment.taskId),
   }));
 
@@ -151,7 +151,7 @@ const HomePage = () => {
                 {rows.map((assignment) => (
                   <tr key={assignment.taskKey}>
                     <td>{assignment.roomId}</td>
-                    <td>{assignment.taskType}</td>
+                    <td>{assignment.taskType} Cleaning</td>
                     <td>{assignment.durationMinutes} mins</td>
                     <td>{assignment.shift}</td>
                     <td>{formatAssignedAt(assignment.assignedAt)}</td>
@@ -169,7 +169,9 @@ const HomePage = () => {
                         }
                         disabled={
                           activeTaskId === assignment.taskId ||
-                          !["PENDING", "IN_PROGRESS"].includes(assignment.status)
+                          !["PENDING", "IN_PROGRESS"].includes(
+                            assignment.status,
+                          )
                         }
                       >
                         {activeTaskId === assignment.taskId
