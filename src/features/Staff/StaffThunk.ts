@@ -27,6 +27,16 @@ export type CompleteTaskResponse = {
   taskId: number;
 };
 
+export type LeaveType = "PLANNED" | "SICK";
+
+export type LeaveResponse = {
+  date: string;
+  leaveType: LeaveType;
+  shift: string;
+  staff_id: number;
+  status: string;
+};
+
 const formatCurrentDate = () => {
   const currentDate = new Date();
   const year = currentDate.getFullYear();
@@ -68,6 +78,16 @@ const getErrorMessage = (error: unknown, fallbackMessage: string) => {
   }
 
   return fallbackMessage;
+};
+
+const getStaffContext = (state: RootState) => {
+  const { shift, staffId } = state.login;
+
+  if (!staffId || !shift) {
+    return null;
+  }
+
+  return { shift, staffId };
 };
 
 export const fetchStaffAssignmentsThunk = createAsyncThunk<
@@ -152,6 +172,43 @@ export const completeTask = createAsyncThunk<
   } catch (error) {
     return thunkApi.rejectWithValue(
       getErrorMessage(error, "Unable to complete the selected task."),
+    );
+  }
+});
+
+export const leaveThunk = createAsyncThunk<
+  LeaveResponse,
+  { date: string; leaveType: LeaveType },
+  { rejectValue: string; state: RootState }
+>("staff/leaveThunk", async ({ date, leaveType }, thunkApi) => {
+  const staffContext = getStaffContext(thunkApi.getState());
+
+  if (!staffContext) {
+    return thunkApi.rejectWithValue(
+      "Missing leave request context for the logged in user.",
+    );
+  }
+
+  try {
+    const response = await apiClient.post<LeaveResponse>(
+      "/leave",
+      {
+        date,
+        leaveType,
+        shift: staffContext.shift,
+        staff_id: staffContext.staffId,
+      },
+      {
+        signal: thunkApi.signal,
+      },
+    );
+
+    console.log(response.data);
+
+    return response.data;
+  } catch (error) {
+    return thunkApi.rejectWithValue(
+      getErrorMessage(error, "Unable to apply for leave right now."),
     );
   }
 });

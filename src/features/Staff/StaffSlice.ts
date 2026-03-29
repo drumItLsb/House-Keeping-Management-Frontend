@@ -4,6 +4,8 @@ import {
   beginTask,
   completeTask,
   fetchStaffAssignmentsThunk,
+  leaveThunk,
+  type LeaveResponse,
   type StaffAssignment,
 } from './StaffThunk';
 
@@ -12,12 +14,18 @@ type StaffStatus = 'idle' | 'loading' | 'succeeded' | 'failed';
 type StaffState = {
   assignments: StaffAssignment[];
   error: string | null;
+  leaveApplication: LeaveResponse | null;
+  leaveError: string | null;
+  leaveStatus: StaffStatus;
   status: StaffStatus;
 };
 
 const initialState: StaffState = {
   assignments: [],
   error: null,
+  leaveApplication: null,
+  leaveError: null,
+  leaveStatus: 'idle',
   status: 'idle',
 };
 
@@ -68,6 +76,19 @@ const staffSlice = createSlice({
       })
       .addCase(completeTask.rejected, (state, action) => {
         state.error = action.payload ?? 'Unable to complete the selected task.';
+      })
+      .addCase(leaveThunk.pending, (state) => {
+        state.leaveError = null;
+        state.leaveStatus = 'loading';
+      })
+      .addCase(leaveThunk.fulfilled, (state, action) => {
+        state.leaveApplication = action.payload;
+        state.leaveError = null;
+        state.leaveStatus = 'succeeded';
+      })
+      .addCase(leaveThunk.rejected, (state, action) => {
+        state.leaveError = action.payload ?? 'Unable to apply for leave right now.';
+        state.leaveStatus = 'failed';
       });
   },
 });

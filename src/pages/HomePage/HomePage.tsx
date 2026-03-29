@@ -19,32 +19,22 @@ import {
   selectIsAuthenticated,
 } from "../../features/Login/LoginSelectors";
 import {
-  selectStaffAssignments,
   selectStaffAssignmentsError,
   selectStaffAssignmentsStatus,
+  selectStaffAssignments,
+  selectLeaveApplication,
 } from "../../features/Staff/StaffSelectors";
 import {
   beginTask,
   completeTask,
   fetchStaffAssignmentsThunk,
+  leaveThunk,
+  type LeaveType,
 } from "../../features/Staff/StaffThunk";
+import AssignmentsTable from "./components/AssignmentsTable";
+import AttendanceCard from "./components/AttendanceCard";
+import LeaveRequestSection from "./components/LeaveRequestSection";
 import styles from "./HomePage.module.scss";
-
-const formatDateTime = (value: string) => {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("en-IN", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
-};
-
-const formatAttendanceValue = (value: string | null, emptyText: string) =>
-  value ? formatDateTime(value) : emptyText;
 
 const HomePage = () => {
   const dispatch = useAppDispatch();
@@ -59,8 +49,11 @@ const HomePage = () => {
   const assignments = useAppSelector(selectStaffAssignments);
   const assignmentsStatus = useAppSelector(selectStaffAssignmentsStatus);
   const assignmentsError = useAppSelector(selectStaffAssignmentsError);
+  const leaveApplication = useAppSelector(selectLeaveApplication);
   const [activeTaskId, setActiveTaskId] = useState<number | null>(null);
   const [isAttendanceUpdating, setIsAttendanceUpdating] = useState(false);
+  const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
+  const [isLeaveSubmitting, setIsLeaveSubmitting] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated || role === "ADMIN") {
@@ -73,19 +66,6 @@ const HomePage = () => {
       promise.abort();
     };
   }, [dispatch, isAuthenticated, role]);
-
-  const rows = assignments.map((assignment) => ({
-    ...assignment,
-    actionLabel:
-      assignment.status === "PENDING"
-        ? "Start Task"
-        : assignment.status === "IN_PROGRESS"
-          ? "Complete Task"
-          : assignment.status === "COMPLETED"
-            ? "COMPLETED"
-            : assignment.status,
-    taskKey: String(assignment.taskId),
-  }));
   const isClockActionDisabled = Boolean(clockOutTime);
   const attendanceActionLabel = !clockInTime ? "ClockIn" : "ClockOut";
 
@@ -153,6 +133,27 @@ const HomePage = () => {
     }
   };
 
+  const handleLeaveSubmit = async (values: {
+    date: string;
+    leaveType: LeaveType;
+  }) => {
+    setIsLeaveSubmitting(true);
+
+    try {
+      await dispatch(leaveThunk(values)).unwrap();
+      setIsLeaveModalOpen(false);
+    } catch (error) {
+      const message =
+        typeof error === "string"
+          ? error
+          : "Unable to apply for leave right now.";
+
+      window.alert(message);
+    } finally {
+      setIsLeaveSubmitting(false);
+    }
+  };
+
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
@@ -166,142 +167,34 @@ const HomePage = () => {
         </p>
       </section>
 
-      <section className={styles.attendanceSection}>
-        <article className={styles.attendanceCard}>
-          <div className={styles.attendanceHeader}>
-            <div>
-              <p className={styles.cardEyebrow}>Attendance</p>
-              <h2 className={styles.cardTitle}>Mark your shift for today</h2>
-            </div>
+      <AttendanceCard
+        attendanceActionLabel={attendanceActionLabel}
+        clockInTime={clockInTime}
+        clockOutTime={clockOutTime}
+        earlyExit={earlyExit}
+        isAttendanceUpdating={isAttendanceUpdating}
+        isClockActionDisabled={isClockActionDisabled}
+        isClockedIn={isClockedIn}
+        onAttendanceAction={handleAttendanceAction}
+        workedHours={workedHours}
+      />
 
-            <button
-              className={styles.attendanceButton}
-              type="button"
-              onClick={handleAttendanceAction}
-              disabled={isAttendanceUpdating || isClockActionDisabled}
-            >
-              {isAttendanceUpdating
-                ? isClockedIn
-                  ? "Clocking out..."
-                  : "Clocking in..."
-                : attendanceActionLabel}
-            </button>
-          </div>
+      <LeaveRequestSection
+        isLeaveModalOpen={isLeaveModalOpen}
+        isSubmitting={isLeaveSubmitting}
+        leaveApplication={leaveApplication}
+        onClose={() => setIsLeaveModalOpen(false)}
+        onOpen={() => setIsLeaveModalOpen(true)}
+        onSubmit={handleLeaveSubmit}
+      />
 
-          <div className={styles.attendanceDetails}>
-            <div className={styles.attendanceInfo}>
-              <span className={styles.attendanceLabel}>Clocked In</span>
-              <strong className={styles.attendanceValue}>
-                {formatAttendanceValue(
-                  clockInTime,
-                  "Not clockedIn for the day",
-                )}
-              </strong>
-            </div>
-
-            <div className={styles.attendanceInfo}>
-              <span className={styles.attendanceLabel}>Clocked Out</span>
-              <strong className={styles.attendanceValue}>
-                {formatAttendanceValue(
-                  clockOutTime,
-                  "Not clockedOut for the day",
-                )}
-              </strong>
-            </div>
-
-            {clockOutTime ? (
-              <div className={styles.attendanceInfo}>
-                <span className={styles.attendanceLabel}>Worked Hours</span>
-                <strong className={styles.attendanceValue}>
-                  {workedHours || "Not available"}
-                </strong>
-              </div>
-            ) : null}
-
-            {clockOutTime ? (
-              <div className={styles.attendanceInfo}>
-                <span className={styles.attendanceLabel}>Early Exit</span>
-                <strong className={styles.attendanceValue}>
-                  {earlyExit ? "Yes" : "No"}
-                </strong>
-              </div>
-            ) : null}
-          </div>
-        </article>
-      </section>
-
-      <section className={styles.tasksSection}>
-        {assignmentsStatus === "loading" ? (
-          <div className={styles.stateCard}>Loading today&apos;s tasks...</div>
-        ) : null}
-
-        {assignmentsStatus === "failed" ? (
-          <div className={styles.stateCard}>
-            {assignmentsError || "Unable to load assignments."}
-          </div>
-        ) : null}
-
-        {assignmentsStatus === "succeeded" && rows.length === 0 ? (
-          <div className={styles.stateCard}>
-            No tasks are assigned to you for today.
-          </div>
-        ) : null}
-
-        {rows.length > 0 ? (
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Room ID</th>
-                  <th>Task Type</th>
-                  <th>Duration</th>
-                  <th>Shift</th>
-                  <th>Assigned At</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((assignment) => (
-                  <tr key={assignment.taskKey}>
-                    <td>{assignment.roomId}</td>
-                    <td>{assignment.taskType} Cleaning</td>
-                    <td>{assignment.durationMinutes} mins</td>
-                    <td>{assignment.shift}</td>
-                    <td>{formatDateTime(assignment.assignedAt)}</td>
-                    <td>
-                      <span className={styles.statusBadge}>
-                        {assignment.status}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        className={styles.actionButton}
-                        type="button"
-                        onClick={() =>
-                          handleTaskAction(assignment.taskId, assignment.status)
-                        }
-                        disabled={
-                          activeTaskId === assignment.taskId ||
-                          !["PENDING", "IN_PROGRESS"].includes(
-                            assignment.status,
-                          )
-                        }
-                      >
-                        {activeTaskId === assignment.taskId
-                          ? assignment.status === "PENDING"
-                            ? "Starting..."
-                            : "Completing..."
-                          : assignment.actionLabel}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : null}
-      </section>
+      <AssignmentsTable
+        activeTaskId={activeTaskId}
+        assignments={assignments}
+        assignmentsError={assignmentsError}
+        assignmentsStatus={assignmentsStatus}
+        onTaskAction={handleTaskAction}
+      />
     </main>
   );
 };
