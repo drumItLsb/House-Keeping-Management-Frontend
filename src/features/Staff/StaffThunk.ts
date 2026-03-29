@@ -15,6 +15,12 @@ export type StaffAssignment = {
   taskType: string;
 };
 
+export type BeginTaskResponse = {
+  message: string;
+  status: string;
+  taskId: number;
+};
+
 const formatCurrentDate = () => {
   const currentDate = new Date();
   const year = currentDate.getFullYear();
@@ -22,6 +28,19 @@ const formatCurrentDate = () => {
   const day = String(currentDate.getDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
+};
+
+const formatLocalDateTime = () => {
+  const currentDate = new Date();
+  const year = currentDate.getFullYear();
+  const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+  const day = String(currentDate.getDate()).padStart(2, "0");
+  const hours = String(currentDate.getHours()).padStart(2, "0");
+  const minutes = String(currentDate.getMinutes()).padStart(2, "0");
+  const seconds = String(currentDate.getSeconds()).padStart(2, "0");
+  const milliseconds = String(currentDate.getMilliseconds()).padStart(3, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}`;
 };
 
 const getErrorMessage = (error: unknown, fallbackMessage: string) => {
@@ -77,6 +96,31 @@ export const fetchStaffAssignmentsThunk = createAsyncThunk<
   } catch (error) {
     return thunkApi.rejectWithValue(
       getErrorMessage(error, "Unable to fetch staff assignments."),
+    );
+  }
+});
+
+export const beginTask = createAsyncThunk<
+  BeginTaskResponse,
+  { taskId: number },
+  { rejectValue: string; state: RootState }
+>("staff/beginTask", async ({ taskId }, thunkApi) => {
+  try {
+    const response = await apiClient.put<BeginTaskResponse>(
+      "/staff/task/begin",
+      {
+        startTime: formatLocalDateTime(),
+        taskId,
+      },
+      {
+        signal: thunkApi.signal,
+      },
+    );
+
+    return response.data;
+  } catch (error) {
+    return thunkApi.rejectWithValue(
+      getErrorMessage(error, "Unable to begin the selected task."),
     );
   }
 });

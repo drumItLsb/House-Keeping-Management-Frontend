@@ -12,7 +12,10 @@ import {
   selectStaffAssignmentsError,
   selectStaffAssignmentsStatus,
 } from "../../features/Staff/StaffSelectors";
-import { fetchStaffAssignmentsThunk } from "../../features/Staff/StaffThunk";
+import {
+  beginTask,
+  fetchStaffAssignmentsThunk,
+} from "../../features/Staff/StaffThunk";
 import styles from "./HomePage.module.scss";
 
 const formatAssignedAt = (assignedAt: string) => {
@@ -36,7 +39,7 @@ const HomePage = () => {
   const assignments = useAppSelector(selectStaffAssignments);
   const assignmentsStatus = useAppSelector(selectStaffAssignmentsStatus);
   const assignmentsError = useAppSelector(selectStaffAssignmentsError);
-  const [startedTasks, setStartedTasks] = useState<Record<string, boolean>>({});
+  const [activeTaskId, setActiveTaskId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated || role === "ADMIN") {
@@ -52,9 +55,12 @@ const HomePage = () => {
 
   const rows = assignments.map((assignment) => ({
     ...assignment,
-    actionLabel: startedTasks[String(assignment.taskId)]
-      ? "Mark Completed"
-      : "Start Task",
+    actionLabel:
+      assignment.status === "PENDING"
+        ? "Start Task"
+        : assignment.status === "IN_PROGRESS"
+          ? "Complete Task"
+          : assignment.status,
     taskKey: String(assignment.taskId),
   }));
 
@@ -66,11 +72,24 @@ const HomePage = () => {
     return <Navigate to="/admin" replace />;
   }
 
-  const handleTaskAction = (taskKey: string) => {
-    setStartedTasks((currentState) => ({
-      ...currentState,
-      [taskKey]: true,
-    }));
+  const handleTaskAction = async (taskId: number, status: string) => {
+    if (status !== "PENDING") {
+      return;
+    }
+
+    setActiveTaskId(taskId);
+
+    try {
+      await dispatch(beginTask({ taskId })).unwrap();
+    } catch (error) {
+      const message =
+        typeof error === "string"
+          ? error
+          : "Unable to begin the selected task.";
+      window.alert(message);
+    } finally {
+      setActiveTaskId(null);
+    }
   };
 
   return (
@@ -134,9 +153,17 @@ const HomePage = () => {
                       <button
                         className={styles.actionButton}
                         type="button"
-                        onClick={() => handleTaskAction(assignment.taskKey)}
+                        onClick={() =>
+                          handleTaskAction(assignment.taskId, assignment.status)
+                        }
+                        disabled={
+                          activeTaskId === assignment.taskId ||
+                          !["PENDING", "IN_PROGRESS"].includes(assignment.status)
+                        }
                       >
-                        {assignment.actionLabel}
+                        {activeTaskId === assignment.taskId
+                          ? "Starting..."
+                          : assignment.actionLabel}
                       </button>
                     </td>
                   </tr>

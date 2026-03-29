@@ -1,6 +1,10 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-import { fetchStaffAssignmentsThunk, type StaffAssignment } from './StaffThunk';
+import {
+  beginTask,
+  fetchStaffAssignmentsThunk,
+  type StaffAssignment,
+} from './StaffThunk';
 
 type StaffStatus = 'idle' | 'loading' | 'succeeded' | 'failed';
 
@@ -35,6 +39,20 @@ const staffSlice = createSlice({
         state.assignments = [];
         state.error = action.payload ?? 'Unable to fetch staff assignments.';
         state.status = 'failed';
+      })
+      .addCase(beginTask.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(beginTask.fulfilled, (state, action) => {
+        state.assignments = state.assignments.map((assignment) =>
+          assignment.taskId === action.payload.taskId
+            ? { ...assignment, status: action.payload.status }
+            : assignment,
+        );
+        state.error = null;
+      })
+      .addCase(beginTask.rejected, (state, action) => {
+        state.error = action.payload ?? 'Unable to begin the selected task.';
       });
   },
 });
