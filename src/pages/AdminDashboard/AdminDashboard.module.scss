@@ -8,8 +8,8 @@
 }
 
 .hero {
-  max-width: 46rem;
-  margin: 4rem auto 0;
+  max-width: 72rem;
+  margin: 1rem auto 0;
   padding: clamp(1.75rem, 5vw, 3rem);
   border-radius: 2rem;
   background: rgba(255, 255, 255, 0.94);
@@ -36,4 +36,211 @@
   font-size: 1rem;
   line-height: 1.7;
   color: #475569;
+}
+
+.section {
+  max-width: 72rem;
+  margin: 1.5rem auto 0;
+}
+
+.sectionHeader {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.sectionEyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9a3412;
+}
+
+.sectionTitle {
+  margin: 0;
+  color: #111827;
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+}
+
+.dateChip {
+  border-radius: 999px;
+  padding: 0.55rem 0.9rem;
+  background: rgba(154, 52, 18, 0.08);
+  color: #9a3412;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.stateCard {
+  padding: 1.1rem 1.3rem;
+  border-radius: 1.2rem;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+  color: #334155;
+  font-weight: 600;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.summaryCard,
+.shortfallCard {
+  padding: 1.3rem;
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+}
+
+.cardTitle {
+  margin: 0 0 1rem;
+  color: #111827;
+  font-size: 1.1rem;
+}
+
+.metricsList {
+  display: grid;
+  gap: 0.8rem;
+  margin: 0;
+}
+
+.metricItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 0.95rem;
+  border-radius: 1rem;
+  background: #fff7ed;
+}
+
+.metricItem dt {
+  color: #7c2d12;
+  font-weight: 700;
+}
+
+.metricItem dd {
+  margin: 0;
+  color: #111827;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+}
+
+.table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 1rem 1.1rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.table th {
+  background: #fff1e6;
+  color: #9a3412;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.table tbody tr:hover {
+  background: rgba(255, 247, 237, 0.8);
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  background: #ffedd5;
+  color: #9a3412;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.shortfallCard {
+  max-width: 26rem;
+}
+
+.shortfallOpen {
+  border: 1px solid rgba(220, 38, 38, 0.16);
+}
+
+.shortfallResolved {
+  border: 1px solid rgba(22, 163, 74, 0.16);
+}
+
+.shortfallTopRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.shortfallLabel {
+  margin: 0 0 0.25rem;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.shortfallShift {
+  border-radius: 999px;
+  padding: 0.4rem 0.7rem;
+  background: #fff1e6;
+  color: #9a3412;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.shortfallMainValue {
+  margin-top: 1rem;
+  color: #111827;
+  font-size: clamp(2.75rem, 7vw, 4rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.shortfallText,
+.shortfallStatusText {
+  margin: 0.55rem 0 0;
+  color: #475569;
+}
+
+@media (max-width: 900px) {
+  .summaryGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .sectionHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dateChip,
+  .shortfallShift {
+    width: fit-content;
+  }
 }
