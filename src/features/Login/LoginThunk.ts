@@ -16,6 +16,7 @@ export type LoginRequest = {
 export type LoginResponse = {
   propertyId: string;
   role: string;
+  shift: string;
   staffId: number;
   token: string;
   tokenType: string;
@@ -57,7 +58,6 @@ export const loginThunk = createAsyncThunk<
       },
       { signal: thunkApi.signal },
     );
-    console.log(response.data);
 
     writeStoredAuth(response.data);
 

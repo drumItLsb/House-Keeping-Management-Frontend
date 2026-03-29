@@ -18,6 +18,7 @@ const initialState: LoginState = {
   isAuthenticated: Boolean(storedAuth?.token),
   propertyId: storedAuth?.propertyId ?? '',
   role: storedAuth?.role ?? '',
+  shift: storedAuth?.shift ?? '',
   staffId: storedAuth?.staffId ?? 0,
   status: 'idle',
   token: storedAuth?.token ?? '',
@@ -44,6 +45,7 @@ const loginSlice = createSlice({
         state.isAuthenticated = true;
         state.propertyId = action.payload.propertyId;
         state.role = action.payload.role;
+        state.shift = action.payload.shift;
         state.staffId = action.payload.staffId;
         state.status = 'succeeded';
         state.token = action.payload.token;
@@ -55,6 +57,7 @@ const loginSlice = createSlice({
         state.isAuthenticated = false;
         state.propertyId = '';
         state.role = '';
+        state.shift = '';
         state.staffId = 0;
         state.status = 'failed';
         state.token = '';
@@ -69,6 +72,7 @@ const loginSlice = createSlice({
         state.isAuthenticated = false;
         state.propertyId = '';
         state.role = '';
+        state.shift = '';
         state.staffId = 0;
         state.status = 'idle';
         state.token = '';
